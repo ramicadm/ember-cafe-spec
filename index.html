@@ -1,12 +1,556 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ember & Grain spec site</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ember & Grain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ink:       #1C1612;
+      --cream:     #F2EBD9;
+      --parchment: #E8DEC8;
+      --terra:     #B85C38;
+      --terra-dk:  #8F3E1E;
+      --olive:     #5C6445;
+      --dust:      #A89880;
+      --warm-wht:  #FAF6EE;
+      --charcoal:  #2A2118;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--cream); color:var(--ink); font-family:'Syne',sans-serif; font-weight:400; overflow-x:hidden; cursor:none; }
+
+    /* CURSOR */
+    .cursor { position:fixed; top:0; left:0; width:10px; height:10px; background:var(--terra); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:transform 0.08s,width 0.3s,height 0.3s,opacity 0.3s; mix-blend-mode:multiply; }
+    .cursor.big { width:52px; height:52px; opacity:0.22; }
+
+    /* GRAIN */
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); opacity:0.03; pointer-events:none; z-index:9990; }
+
+    /* NAV */
+    nav { position:fixed; top:0; left:0; right:0; z-index:1000; padding:2rem 3.5rem; display:flex; justify-content:space-between; align-items:center; mix-blend-mode:multiply; }
+    .nav-wordmark { font-family:'Instrument Serif',serif; font-style:italic; font-size:1.4rem; color:var(--ink); letter-spacing:-0.01em; }
+    .nav-links { display:flex; gap:2.5rem; list-style:none; }
+    .nav-links a { font-size:0.66rem; letter-spacing:0.2em; text-transform:uppercase; text-decoration:none; color:var(--ink); transition:color 0.2s; }
+    .nav-links a:hover { color:var(--terra); }
+
+    /* HERO */
+    .hero { min-height:100vh; position:relative; display:flex; flex-direction:column; justify-content:flex-end; padding:0 3.5rem 5.5rem; overflow:hidden; }
+    .hero-bg { position:absolute; inset:0; background:radial-gradient(ellipse at 65% 35%, #D4B090 0%, #C09060 25%, #96602A 60%, #5C3010 100%); z-index:0; }
+    .hero-circle { position:absolute; border-radius:50%; pointer-events:none; will-change:transform; }
+    .hc1 { width:680px; height:680px; top:-140px; right:-120px; background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 70%); z-index:1; }
+    .hc2 { width:280px; height:280px; bottom:18%; left:52%; border:1px solid rgba(255,255,255,0.12); z-index:1; }
+    .hc3 { width:100px; height:100px; top:32%; left:35%; border:1px solid rgba(255,255,255,0.18); z-index:1; }
+    .hero-cup { position:absolute; right:6%; top:50%; transform:translateY(-50%); z-index:2; opacity:0.15; will-change:transform; }
+    .hero-content { position:relative; z-index:3; max-width:860px; }
+    .hero-label { font-size:0.63rem; letter-spacing:0.26em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:1.5rem; display:block; opacity:0; animation:slideUp 1s ease 0.3s forwards; }
+    .hero-title { font-family:'Instrument Serif',serif; font-size:clamp(4rem,11vw,9.5rem); font-weight:400; line-height:0.9; color:#FAF6EE; letter-spacing:-0.025em; margin-bottom:3.5rem; opacity:0; animation:slideUp 1s ease 0.5s forwards; }
+    .hero-title em { font-style:italic; color:rgba(255,255,255,0.48); }
+    .hero-bottom { display:flex; justify-content:space-between; align-items:flex-end; opacity:0; animation:slideUp 1s ease 0.75s forwards; }
+    .hero-desc { font-size:0.85rem; line-height:1.85; color:rgba(255,255,255,0.6); max-width:320px; font-family:'Libre Baskerville',serif; font-style:italic; }
+    .hero-cta-group { display:flex; flex-direction:column; align-items:flex-end; gap:1.2rem; }
+    .btn-outline-light { display:inline-block; border:1px solid rgba(255,255,255,0.38); color:rgba(255,255,255,0.82); font-size:0.68rem; letter-spacing:0.16em; text-transform:uppercase; text-decoration:none; padding:0.9rem 2.2rem; transition:all 0.25s; }
+    .btn-outline-light:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.7); color:#fff; }
+    .scroll-hint { font-size:0.58rem; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.3); display:flex; align-items:center; gap:0.75rem; }
+    .scroll-hint::before { content:''; display:block; width:1px; height:38px; background:rgba(255,255,255,0.2); animation:scrollPulse 2s ease-in-out infinite; }
+    @keyframes scrollPulse { 0%,100%{opacity:0.3;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.35)} }
+
+    /* MARQUEE */
+    .marquee-strip { background:var(--terra); padding:1rem 0; overflow:hidden; white-space:nowrap; }
+    .marquee-inner { display:inline-flex; animation:marquee 24s linear infinite; }
+    .marquee-item { font-family:'Instrument Serif',serif; font-style:italic; font-size:1rem; color:rgba(255,255,255,0.82); padding:0 2.5rem; }
+    .marquee-dot { color:rgba(255,255,255,0.28); padding:0 0.4rem; }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ABOUT */
+    .about { padding:9rem 3.5rem; display:grid; grid-template-columns:1fr 1.45fr; gap:5rem; align-items:center; background:var(--warm-wht); }
+    .about-visual { position:relative; }
+    .about-img-main { width:100%; aspect-ratio:4/5; background:linear-gradient(160deg,#C4A070 0%,#8B6040 55%,#5A3020 100%); position:relative; overflow:hidden; }
+    .about-img-main::after { content:'E\26 G'; position:absolute; bottom:-2rem; right:-1rem; font-family:'Instrument Serif',serif; font-size:10rem; color:rgba(255,255,255,0.05); line-height:1; pointer-events:none; }
+    .about-accent { position:absolute; top:-2.5rem; right:-2.5rem; width:44%; aspect-ratio:1; background:var(--charcoal); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:0.4rem; }
+    .about-accent .an { font-family:'Instrument Serif',serif; font-size:3.5rem; color:var(--terra); font-style:italic; line-height:1; }
+    .about-accent .al { font-size:0.56rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.38); }
+    .about-tag { position:absolute; bottom:2.5rem; left:-2rem; background:var(--terra); color:#fff; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; padding:0.6rem 1.2rem; }
+    .s-label { font-size:0.62rem; letter-spacing:0.24em; text-transform:uppercase; color:var(--terra); margin-bottom:1rem; display:block; }
+    .about-text h2 { font-family:'Instrument Serif',serif; font-size:clamp(2rem,3.8vw,3.4rem); font-weight:400; line-height:1.1; color:var(--ink); margin-bottom:2rem; letter-spacing:-0.01em; }
+    .about-text h2 em { font-style:italic; color:var(--terra); }
+    .about-text p { font-family:'Libre Baskerville',serif; font-size:0.9rem; line-height:2; color:#5A4A38; margin-bottom:1.2rem; }
+    .about-divider { width:48px; height:1px; background:var(--dust); margin:2rem 0; }
+    .about-pills { display:flex; gap:0.65rem; flex-wrap:wrap; }
+    .pill { border:1px solid rgba(92,61,46,0.18); color:var(--ink); font-size:0.6rem; letter-spacing:0.14em; text-transform:uppercase; padding:0.48rem 0.9rem; }
+
+    /* MENU */
+    .menu { background:var(--charcoal); padding:8rem 3.5rem; position:relative; overflow:hidden; }
+    .menu::before { content:'MENU'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Instrument Serif',serif; font-size:28vw; color:rgba(255,255,255,0.018); pointer-events:none; white-space:nowrap; letter-spacing:-0.05em; line-height:1; }
+    .menu-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5rem; position:relative; }
+    .menu-head h2 { font-family:'Instrument Serif',serif; font-size:clamp(2.4rem,5vw,4.5rem); font-weight:400; line-height:1.05; color:var(--cream); letter-spacing:-0.02em; }
+    .menu-head h2 em { font-style:italic; color:var(--terra); }
+    .menu-tabs { display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end; padding-top:0.5rem; }
+    .m-tab { background:none; border:none; cursor:none; font-family:'Syne',sans-serif; font-size:0.63rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.28); padding:0.35rem 0; transition:color 0.2s; position:relative; }
+    .m-tab::after { content:''; position:absolute; right:-1.2rem; top:50%; transform:translateY(-50%); width:0; height:1px; background:var(--terra); transition:width 0.3s; }
+    .m-tab.active { color:var(--cream); }
+    .m-tab.active::after { width:0.85rem; }
+    .m-tab:hover { color:rgba(255,255,255,0.65); }
+    .menu-panel { display:none; }
+    .menu-panel.active { display:block; }
+    .menu-row { display:grid; grid-template-columns:2fr 1fr auto; align-items:baseline; gap:2rem; padding:1.7rem 0; border-bottom:1px solid rgba(255,255,255,0.055); transition:background 0.22s,padding 0.22s,margin 0.22s; }
+    .menu-row:hover { background:rgba(255,255,255,0.025); margin:0 -2rem; padding:1.7rem 2rem; }
+    .dish-name { font-family:'Instrument Serif',serif; font-size:1.4rem; color:var(--cream); font-weight:400; letter-spacing:-0.01em; }
+    .dish-desc { font-size:0.7rem; color:rgba(255,255,255,0.32); letter-spacing:0.04em; margin-top:0.3rem; font-family:'Libre Baskerville',serif; font-style:italic; }
+    .dish-tag { font-size:0.56rem; letter-spacing:0.14em; text-transform:uppercase; background:var(--olive); color:rgba(255,255,255,0.78); padding:0.22rem 0.6rem; vertical-align:middle; margin-left:0.5rem; }
+    .dish-price { font-family:'Instrument Serif',serif; font-style:italic; font-size:1.2rem; color:var(--terra); text-align:right; align-self:center; }
+    .dish-num { font-size:0.58rem; color:rgba(255,255,255,0.12); letter-spacing:0.05em; text-align:right; align-self:center; }
+
+    /* PULL QUOTE */
+    .interlude { background:var(--terra); padding:6rem 3.5rem; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; }
+    .interlude::before { content:'\201C'; position:absolute; top:-4rem; left:1rem; font-family:'Instrument Serif',serif; font-size:22rem; color:rgba(255,255,255,0.06); line-height:1; pointer-events:none; }
+    .interlude blockquote { font-family:'Instrument Serif',serif; font-style:italic; font-size:clamp(1.7rem,3.2vw,2.8rem); color:rgba(255,255,255,0.9); line-height:1.3; max-width:760px; position:relative; z-index:1; }
+    .interlude cite { display:block; font-family:'Syne',sans-serif; font-style:normal; font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.42); margin-top:1.75rem; }
+
+    /* GALLERY */
+    .gallery { background:var(--cream); padding:8rem 0 8rem 3.5rem; overflow:hidden; }
+    .gallery-head { margin-bottom:3.5rem; }
+    .gallery-head h2 { font-family:'Instrument Serif',serif; font-size:clamp(2rem,3.8vw,3.4rem); font-weight:400; line-height:1.1; color:var(--ink); letter-spacing:-0.01em; }
+    .gallery-head h2 em { font-style:italic; color:var(--terra); }
+    .gallery-row { display:flex; gap:1.25rem; align-items:flex-start; }
+    .g-card { flex:0 0 auto; position:relative; overflow:hidden; cursor:none; }
+    .g-card:nth-child(1){width:350px;height:470px}
+    .g-card:nth-child(2){width:230px;height:350px;align-self:flex-end}
+    .g-card:nth-child(3){width:410px;height:510px}
+    .g-card:nth-child(4){width:270px;height:390px;align-self:center}
+    .g-card:nth-child(5){width:310px;height:450px;align-self:flex-end}
+    .g-fill { position:absolute; inset:0; transition:transform 0.65s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .g-card:hover .g-fill { transform:scale(1.06); }
+    .gc1{background:linear-gradient(165deg,#C49060,#7A4820)}
+    .gc2{background:linear-gradient(155deg,#6B7352,#3A4228)}
+    .gc3{background:linear-gradient(148deg,#C4623A,#6B2810)}
+    .gc4{background:linear-gradient(165deg,#B8A898,#6A5848)}
+    .gc5{background:linear-gradient(152deg,#2A2118,#5C4030)}
+    .g-label { position:absolute; bottom:1.5rem; left:1.5rem; font-family:'Instrument Serif',serif; font-style:italic; font-size:0.88rem; color:rgba(255,255,255,0.55); z-index:2; }
+    .g-num { position:absolute; top:1.2rem; right:1.2rem; font-size:0.52rem; letter-spacing:0.14em; color:rgba(255,255,255,0.22); z-index:2; }
+
+    /* TESTIMONIALS */
+    .testimonials { background:var(--parchment); padding:8rem 3.5rem; }
+    .testi-head { margin-bottom:5rem; display:flex; justify-content:space-between; align-items:flex-end; }
+    .testi-head h2 { font-family:'Instrument Serif',serif; font-size:clamp(2rem,3.5vw,3.2rem); font-weight:400; line-height:1.1; color:var(--ink); letter-spacing:-0.01em; }
+    .testi-head h2 em { font-style:italic; color:var(--terra); }
+    .testi-count { font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--dust); }
+    .testi-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:1.5rem; align-items:start; }
+    .testi-card { padding:2.5rem; background:var(--warm-wht); }
+    .testi-card.feat { background:var(--charcoal); padding:3rem; }
+    .testi-stars { font-size:0.68rem; letter-spacing:0.2em; color:var(--terra); margin-bottom:1.2rem; }
+    .testi-body { font-family:'Libre Baskerville',serif; font-style:italic; font-size:0.9rem; line-height:1.88; color:#5A4A38; margin-bottom:1.8rem; }
+    .testi-card.feat .testi-body { font-size:1.02rem; color:rgba(255,255,255,0.72); }
+    .testi-author { display:flex; align-items:center; gap:0.85rem; }
+    .testi-av { width:36px; height:36px; border-radius:50%; font-family:'Instrument Serif',serif; font-style:italic; font-size:1rem; display:flex; align-items:center; justify-content:center; color:#fff; }
+    .av-a{background:var(--terra)}.av-b{background:var(--olive)}.av-c{background:var(--charcoal)}
+    .t-name { font-size:0.7rem; font-weight:600; letter-spacing:0.05em; color:var(--ink); }
+    .testi-card.feat .t-name { color:rgba(255,255,255,0.65); }
+    .t-where { font-size:0.58rem; letter-spacing:0.1em; color:var(--dust); margin-top:0.2rem; }
+    .testi-right { display:flex; flex-direction:column; gap:1.5rem; }
+
+    /* CONTACT */
+    .contact { background:var(--ink); padding:8rem 3.5rem; display:grid; grid-template-columns:1.1fr 1fr; gap:6rem; }
+    .contact-left h2 { font-family:'Instrument Serif',serif; font-size:clamp(2.4rem,5vw,4.5rem); font-weight:400; line-height:1.05; color:var(--cream); letter-spacing:-0.02em; margin-bottom:3.5rem; }
+    .contact-left h2 em { font-style:italic; color:var(--terra); }
+    .c-detail { margin-bottom:2rem; }
+    .c-label { font-size:0.58rem; letter-spacing:0.24em; text-transform:uppercase; color:var(--dust); display:block; margin-bottom:0.5rem; }
+    .c-val { font-family:'Libre Baskerville',serif; font-size:0.88rem; line-height:1.7; color:rgba(255,255,255,0.55); }
+    .c-val a { color:rgba(255,255,255,0.55); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.12); transition:color 0.2s,border-color 0.2s; }
+    .c-val a:hover { color:var(--terra); border-color:var(--terra); }
+    .c-hours { margin-top:0.4rem; }
+    .c-hours-row { display:flex; gap:2rem; margin-bottom:0.3rem; }
+    .c-hours-row .day { font-size:0.62rem; letter-spacing:0.1em; color:var(--dust); min-width:90px; }
+    .c-hours-row .hrs { font-family:'Libre Baskerville',serif; font-size:0.88rem; color:rgba(255,255,255,0.55); }
+    .contact-form { display:flex; flex-direction:column; gap:1.2rem; padding-top:0.5rem; }
+    .f-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .f-group { display:flex; flex-direction:column; gap:0.4rem; }
+    .f-group label { font-size:0.58rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--dust); }
+    .f-group input,.f-group textarea,.f-group select { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:0.88rem 1.1rem; font-family:'Syne',sans-serif; font-size:0.8rem; color:rgba(255,255,255,0.72); outline:none; transition:border-color 0.2s; appearance:none; }
+    .f-group input:focus,.f-group textarea:focus,.f-group select:focus { border-color:var(--terra); }
+    .f-group textarea { resize:vertical; min-height:108px; }
+    .btn-terra { background:var(--terra); color:#fff; border:none; padding:1rem; font-family:'Syne',sans-serif; font-size:0.68rem; letter-spacing:0.16em; text-transform:uppercase; cursor:none; transition:background 0.25s; width:100%; }
+    .btn-terra:hover { background:var(--terra-dk); }
+
+    /* FOOTER */
+    footer { background:var(--charcoal); padding:2.75rem 3.5rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.045); }
+    .footer-mark { font-family:'Instrument Serif',serif; font-style:italic; font-size:1.25rem; color:rgba(255,255,255,0.55); }
+    .footer-mark span { color:var(--terra); }
+    .footer-copy { font-size:0.58rem; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.18); }
+    .footer-links { display:flex; gap:2rem; list-style:none; }
+    .footer-links a { font-size:0.58rem; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.28); text-decoration:none; transition:color 0.2s; }
+    .footer-links a:hover { color:var(--terra); }
+
+    /* REVEAL */
+    .reveal { opacity:0; transform:translateY(40px); transition:opacity 0.85s cubic-bezier(0.16,1,0.3,1),transform 0.85s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.vis { opacity:1; transform:none; }
+    .d1{transition-delay:0.1s}.d2{transition-delay:0.22s}.d3{transition-delay:0.34s}
+
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+
+    /* MOBILE */
+    @media(max-width:860px){
+      body{cursor:auto}
+      .cursor{display:none}
+      nav{padding:1.5rem 1.5rem}
+      .nav-links{display:none}
+      .hero{padding:0 1.5rem 4rem}
+      .hero-cup{display:none}
+      .hero-title{font-size:clamp(3rem,15vw,6rem)}
+      .hero-bottom{flex-direction:column;align-items:flex-start;gap:2rem}
+      .hero-cta-group{align-items:flex-start}
+      .about{grid-template-columns:1fr;padding:5rem 1.5rem;gap:3rem}
+      .about-accent{right:-1rem;top:-1.5rem}
+      .about-tag{left:0}
+      .menu{padding:5rem 1.5rem}
+      .menu-head{flex-direction:column;gap:2rem}
+      .menu-tabs{align-items:flex-start}
+      .m-tab::after{display:none}
+      .menu-row{grid-template-columns:1fr auto}
+      .dish-num{display:none}
+      .interlude{padding:4rem 1.5rem}
+      .gallery{padding:5rem 0 5rem 1.5rem}
+      .testimonials{padding:5rem 1.5rem}
+      .testi-head{flex-direction:column;gap:1rem}
+      .testi-grid{grid-template-columns:1fr}
+      .contact{grid-template-columns:1fr;padding:5rem 1.5rem;gap:3.5rem}
+      footer{flex-direction:column;gap:1.5rem;text-align:center;padding:2.5rem 1.5rem}
+      .footer-links{justify-content:center}
+    }
+  </style>
 </head>
 <body>
-  <h1>Ember & Grain spec site</h1>
-  <p>Replace this with your spec content.</p>
+
+<div class="cursor" id="cursor"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-wordmark">Ember & Grain</div>
+  <ul class="nav-links">
+    <li><a href="#about">Story</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#contact">Visit</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-circle hc1" data-spd="0.06"></div>
+  <div class="hero-circle hc2" data-spd="0.13"></div>
+  <div class="hero-circle hc3" data-spd="0.09"></div>
+
+  <svg class="hero-cup" data-spd="0.04" width="500" height="500" viewBox="0 0 500 500" fill="none">
+    <ellipse cx="250" cy="410" rx="145" ry="36" fill="rgba(0,0,0,0.22)"/>
+    <path d="M110 250 Q108 408 250 418 Q392 408 390 250 Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.13)" stroke-width="1.5"/>
+    <rect x="100" y="236" width="300" height="28" rx="14" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+    <path d="M390 260 Q450 260 450 310 Q450 360 390 360" stroke="rgba(255,255,255,0.13)" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M190 222 Q200 190 190 162 Q180 134 190 106" stroke="rgba(255,255,255,0.1)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M250 202 Q260 168 250 140 Q240 112 250 84" stroke="rgba(255,255,255,0.1)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M310 222 Q320 190 310 162 Q300 134 310 106" stroke="rgba(255,255,255,0.1)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="250" cy="252" rx="116" ry="20" fill="rgba(0,0,0,0.18)"/>
+  </svg>
+
+  <div class="hero-content">
+    <span class="hero-label">Est. 2019 · Downtown Maplewood, NJ</span>
+    <h1 class="hero-title">
+      Slow<br/>mornings,<br/><em>lived well.</em>
+    </h1>
+    <div class="hero-bottom">
+      <p class="hero-desc">A neighborhood café rooted in seasonal ingredients, small-batch coffee, and the kind of quiet morning that actually restores you.</p>
+      <div class="hero-cta-group">
+        <a href="#menu" class="btn-outline-light">Browse the Menu</a>
+        <div class="scroll-hint">Scroll to explore</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-strip" aria-hidden="true">
+  <div class="marquee-inner">
+    <span class="marquee-item">Single-origin coffee</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Seasonal small plates</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Baked fresh daily</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Open seven mornings</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Downtown Maplewood</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">4.9 ★ on Google</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Reserve your table</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Single-origin coffee</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Seasonal small plates</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Baked fresh daily</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Open seven mornings</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Downtown Maplewood</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">4.9 ★ on Google</span><span class="marquee-dot">·</span>
+    <span class="marquee-item">Reserve your table</span><span class="marquee-dot">·</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-visual reveal">
+    <div class="about-img-main"></div>
+    <div class="about-accent">
+      <span class="an">6+</span>
+      <span class="al">Years in the<br/>neighborhood</span>
+    </div>
+    <div class="about-tag">Est. Maplewood</div>
+  </div>
+  <div class="about-text">
+    <span class="s-label reveal">Our Story</span>
+    <h2 class="reveal d1">Baked with care,<br/>brewed with <em>intention.</em></h2>
+    <p class="reveal d2">Ember & Grain started with a simple conviction: a good café should feel like the best part of your day. Not just the coffee — the light through the windows, the smell of something coming out of the oven, a face that already knows your order.</p>
+    <p class="reveal d2">We bake everything in-house, every morning. Our coffee rotates through three small-batch roasters we've actually visited. And our menu changes with the seasons, because that's just how food should work.</p>
+    <div class="about-divider reveal d3"></div>
+    <div class="about-pills reveal d3">
+      <span class="pill">100% In-house baked</span>
+      <span class="pill">3 roaster partners</span>
+      <span class="pill">Seasonal menu</span>
+      <span class="pill">Dog-friendly terrace</span>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu" id="menu">
+  <div class="menu-head reveal">
+    <h2>What we<br/><em>serve.</em></h2>
+    <div class="menu-tabs">
+      <button class="m-tab active" onclick="switchTab(this,'drinks')">Drinks</button>
+      <button class="m-tab" onclick="switchTab(this,'food')">Food</button>
+      <button class="m-tab" onclick="switchTab(this,'seasonal')">Seasonal</button>
+    </div>
+  </div>
+  <div class="reveal d1">
+    <div class="menu-panel active" id="panel-drinks">
+      <div class="menu-row"><div><div class="dish-name">House Drip</div><div class="dish-desc">Single-origin, rotates monthly. Ask us what's on today.</div></div><div class="dish-price">$4</div><div class="dish-num">01</div></div>
+      <div class="menu-row"><div><div class="dish-name">Ember Latte</div><div class="dish-desc">Double shot, oat milk, cardamom, raw honey</div></div><div class="dish-price">$6.50</div><div class="dish-num">02</div></div>
+      <div class="menu-row"><div><div class="dish-name">Cold Brew Float <span class="dish-tag">Fan Fav</span></div><div class="dish-desc">20hr cold brew over vanilla bean ice cream</div></div><div class="dish-price">$7</div><div class="dish-num">03</div></div>
+      <div class="menu-row"><div><div class="dish-name">Matcha Mist</div><div class="dish-desc">Ceremonial grade, steamed oat milk, maple</div></div><div class="dish-price">$6</div><div class="dish-num">04</div></div>
+      <div class="menu-row"><div><div class="dish-name">Cortado</div><div class="dish-desc">Two shots, equal parts warm milk. Classic.</div></div><div class="dish-price">$5</div><div class="dish-num">05</div></div>
+      <div class="menu-row"><div><div class="dish-name">Chamomile Honey Latte</div><div class="dish-desc">Brewed chamomile, oat milk, wildflower honey</div></div><div class="dish-price">$5.50</div><div class="dish-num">06</div></div>
+    </div>
+    <div class="menu-panel" id="panel-food">
+      <div class="menu-row"><div><div class="dish-name">Avocado Toast <span class="dish-tag">V</span></div><div class="dish-desc">Sourdough, whipped feta, poached egg, chili flake</div></div><div class="dish-price">$13</div><div class="dish-num">01</div></div>
+      <div class="menu-row"><div><div class="dish-name">Morning Grain Bowl</div><div class="dish-desc">Farro, soft egg, roasted beets, tahini, herb oil</div></div><div class="dish-price">$14</div><div class="dish-num">02</div></div>
+      <div class="menu-row"><div><div class="dish-name">Almond Croissant <span class="dish-tag">Fan Fav</span></div><div class="dish-desc">Twice-baked with frangipane and toasted almonds</div></div><div class="dish-price">$5</div><div class="dish-num">03</div></div>
+      <div class="menu-row"><div><div class="dish-name">Smoked Salmon Bagel</div><div class="dish-desc">Everything bagel, cream cheese, capers, red onion</div></div><div class="dish-price">$15</div><div class="dish-num">04</div></div>
+      <div class="menu-row"><div><div class="dish-name">Seasonal Quiche</div><div class="dish-desc">Changes weekly. Ask what's fresh today.</div></div><div class="dish-price">$12</div><div class="dish-num">05</div></div>
+      <div class="menu-row"><div><div class="dish-name">Olive Oil Banana Bread <span class="dish-tag">V</span></div><div class="dish-desc">Walnut, dark chocolate, sea salt. Fresh daily.</div></div><div class="dish-price">$4.50</div><div class="dish-num">06</div></div>
+    </div>
+    <div class="menu-panel" id="panel-seasonal">
+      <div class="menu-row"><div><div class="dish-name">Spring Pea Toast <span class="dish-tag">New</span></div><div class="dish-desc">Whipped ricotta, fresh peas, lemon zest, mint oil</div></div><div class="dish-price">$12</div><div class="dish-num">01</div></div>
+      <div class="menu-row"><div><div class="dish-name">Lavender Honey Latte <span class="dish-tag">New</span></div><div class="dish-desc">House lavender syrup, oat milk, wildflower honey</div></div><div class="dish-price">$6.50</div><div class="dish-num">02</div></div>
+      <div class="menu-row"><div><div class="dish-name">Strawberry Rhubarb Scone</div><div class="dish-desc">Buttery, flaky, turbinado dusted</div></div><div class="dish-price">$4.50</div><div class="dish-num">03</div></div>
+      <div class="menu-row"><div><div class="dish-name">Asparagus & Gruyère Tart</div><div class="dish-desc">Shortcrust, crème fraîche, asparagus, herbs</div></div><div class="dish-price">$13</div><div class="dish-num">04</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PULL QUOTE -->
+<div class="interlude reveal">
+  <blockquote>
+    "We don't rush anything here. Good coffee takes time. So do good mornings."
+    <cite>— Founder, Ember & Grain</cite>
+  </blockquote>
+</div>
+
+<!-- GALLERY -->
+<section class="gallery" id="gallery">
+  <div class="gallery-head reveal">
+    <span class="s-label">A look inside</span>
+    <h2>The space,<br/>the food, <em>the feeling.</em></h2>
+  </div>
+  <div class="gallery-row reveal d1">
+    <div class="g-card"><div class="g-fill gc1"></div><div class="g-label">Morning light</div><div class="g-num">01 / 05</div></div>
+    <div class="g-card"><div class="g-fill gc2"></div><div class="g-label">Garden terrace</div><div class="g-num">02 / 05</div></div>
+    <div class="g-card"><div class="g-fill gc3"></div><div class="g-label">Our pastries</div><div class="g-num">03 / 05</div></div>
+    <div class="g-card"><div class="g-fill gc4"></div><div class="g-label">The counter</div><div class="g-num">04 / 05</div></div>
+    <div class="g-card"><div class="g-fill gc5"></div><div class="g-label">Evening light</div><div class="g-num">05 / 05</div></div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="testimonials">
+  <div class="testi-head reveal">
+    <h2>What people<br/><em>are saying.</em></h2>
+    <span class="testi-count">400+ reviews · 4.9 avg</span>
+  </div>
+  <div class="testi-grid reveal d1">
+    <div class="testi-card feat">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-body">"I've tried every café in this neighborhood. Ember & Grain is on another level. The almond croissant alone is worth the trip. Staff remembers your name after the second visit."</p>
+      <div class="testi-author"><div class="testi-av av-a">M</div><div><div class="t-name">Maya R.</div><div class="t-where">Local · Google</div></div></div>
+    </div>
+    <div class="testi-right">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-body">"This is my WFH office two days a week. The Ember Latte has permanently ruined all other lattes for me. Not a complaint."</p>
+        <div class="testi-author"><div class="testi-av av-b">J</div><div><div class="t-name">James T.</div><div class="t-where">Regular · Yelp</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-body">"We held a brunch here and the team was incredibly accommodating. The seasonal menu was a hit with everyone."</p>
+        <div class="testi-author"><div class="testi-av av-c">S</div><div><div class="t-name">Sandra K.</div><div class="t-where">Visitor · Google</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="contact-left reveal">
+    <h2>Come<br/><em>say hello.</em></h2>
+    <div class="c-detail">
+      <span class="c-label">Address</span>
+      <span class="c-val">84 Birch Lane, Downtown Maplewood<br/>New Jersey 07040</span>
+    </div>
+    <div class="c-detail">
+      <span class="c-label">Hours</span>
+      <div class="c-hours">
+        <div class="c-hours-row"><span class="day">Mon – Fri</span><span class="hrs">7:00am – 4:00pm</span></div>
+        <div class="c-hours-row"><span class="day">Sat – Sun</span><span class="hrs">8:00am – 5:00pm</span></div>
+      </div>
+    </div>
+    <div class="c-detail">
+      <span class="c-label">Contact</span>
+      <span class="c-val"><a href="tel:9735550182">(973) 555-0182</a><br/><a href="mailto:hello@emberandgrain.com">hello@emberandgrain.com</a></span>
+    </div>
+  </div>
+  <div class="reveal d2">
+    <form class="contact-form" onsubmit="handleForm(event)">
+      <div class="f-row">
+        <div class="f-group"><label>First Name</label><input type="text" placeholder="Jane"/></div>
+        <div class="f-group"><label>Last Name</label><input type="text" placeholder="Doe"/></div>
+      </div>
+      <div class="f-group"><label>Email</label><input type="email" placeholder="jane@example.com"/></div>
+      <div class="f-row">
+        <div class="f-group"><label>Party Size</label><select><option>1–2 guests</option><option>3–4 guests</option><option>5–8 guests</option><option>Private event (8+)</option></select></div>
+        <div class="f-group"><label>Preferred Date</label><input type="date"/></div>
+      </div>
+      <div class="f-group"><label>Message (optional)</label><textarea placeholder="Dietary needs, special occasions…"></textarea></div>
+      <button type="submit" class="btn-terra">Send Reservation Request</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-mark">Ember <span>&</span> Grain</div>
+  <ul class="footer-links">
+    <li><a href="#about">Story</a></li><li><a href="#menu">Menu</a></li>
+    <li><a href="#gallery">Gallery</a></li><li><a href="#contact">Visit</a></li>
+  </ul>
+  <div class="footer-copy">© 2026 Ember & Grain · Maplewood NJ</div>
+</footer>
+
+<!-- TRAVIO BADGE -->
+<a href="https://traviocreative.com" target="_blank" rel="noopener" class="travio-badge" aria-label="Built by Travio Creative">
+  <span class="travio-badge-dot"></span>
+  <span class="travio-badge-text">Built by <strong>Travio Creative</strong></span>
+</a>
+
+<style>
+  .travio-badge {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9997;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: #1C1612;
+    border: 1px solid rgba(212,168,90,0.35);
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 0.9rem 0.5rem 0.7rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+    cursor: none;
+  }
+  .travio-badge:hover {
+    border-color: rgba(212,168,90,0.8);
+    box-shadow: 0 4px 28px rgba(212,168,90,0.18);
+    transform: translateY(-2px);
+    color: #fff;
+  }
+  .travio-badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #D4A85A;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(212,168,90,0.7);
+    animation: badgePulse 2.5s ease-in-out infinite;
+  }
+  .travio-badge-text strong {
+    color: #D4A85A;
+    font-weight: 600;
+  }
+  @keyframes badgePulse {
+    0%,100% { box-shadow: 0 0 5px rgba(212,168,90,0.6); }
+    50%      { box-shadow: 0 0 12px rgba(212,168,90,0.95); }
+  }
+  @media(max-width:860px){
+    .travio-badge { cursor: auto; bottom:1rem; right:1rem; }
+  }
+</style>
+
+<script>
+  // Cursor
+  const cur = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cur.style.left = e.clientX+'px';
+    cur.style.top  = e.clientY+'px';
+  });
+  document.querySelectorAll('a,button,.g-card,.menu-row').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('big'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('big'));
+  });
+
+  // Parallax
+  const pEls = document.querySelectorAll('[data-spd]');
+  window.addEventListener('scroll',()=>{
+    const sy = window.scrollY;
+    pEls.forEach(el=>{
+      const s = parseFloat(el.dataset.spd);
+      const base = el.classList.contains('hero-cup') ? 'translateY(calc(-50% + '+sy*s+'px))' : 'translateY('+sy*s+'px)';
+      el.style.transform = base;
+    });
+  },{passive:true});
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach((e,i)=>{
+      if(e.isIntersecting) setTimeout(()=>e.target.classList.add('vis'),i*55);
+    });
+  },{threshold:0.08});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+  // Menu tabs
+  function switchTab(btn,id){
+    document.querySelectorAll('.m-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.menu-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+id).classList.add('active');
+  }
+
+  // Form
+  function handleForm(e){
+    e.preventDefault();
+    const btn=e.target.querySelector('button');
+    btn.textContent='Request Sent ✓';
+    btn.style.background='#5C6445';
+    btn.disabled=true;
+  }
+</script>
 </body>
 </html>
